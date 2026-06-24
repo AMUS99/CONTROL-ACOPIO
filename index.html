@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QUINUA · Control de Acopio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#000; --surface:#1c1c1c; --surface2:#262626; --border:rgba(255,255,255,.22); --text:#fff; --muted:#b3b3b3; }
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .wrap { max-width:420px; width:100%; }
+  .wordmark { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; text-align:center; margin-bottom:8px; }
+  h1 { font-size:24px; text-align:center; margin-bottom:32px; font-weight:700; }
+  .card { display:block; background:var(--surface); border:1.5px solid var(--border); border-radius:16px; padding:22px 20px; margin-bottom:14px; text-decoration:none; color:var(--text); transition:border-color .15s, background .15s; }
+  .card:active { border-color:var(--text); background:var(--surface2); }
+  .card-icon { font-size:26px; margin-bottom:10px; }
+  .card-title { font-size:16px; font-weight:700; margin-bottom:4px; }
+  .card-desc { font-size:13px; color:var(--muted); line-height:1.4; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="wordmark">Quinua · Sistema de control</div>
+    <h1>Registro de campo</h1>
+
+    <a class="card" href="app_acopiador_v3.html">
+      <div class="card-icon">📝</div>
+      <div class="card-title">Registrar actividad de campo</div>
+      <div class="card-desc">Despachos, muestras, pesaje, verificación de grano y cotizaciones.</div>
+    </a>
+  </div>
+</body>
+</html>
