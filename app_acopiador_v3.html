@@ -483,7 +483,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 // ⚠️ IMPORTANTE: reemplaza esta URL con la que te dé tu propio Apps Script
 // (Implementar → Nueva implementación → Aplicación web → copiar URL /exec)
 // Debe ser la MISMA URL que pongas en dashboard_supervisor.html
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbzXyQy8q8Dwftzbcyd7wIjLhx3Y3dNqfBQeaCChBugduMzcXjTEz6-REgXZ9u3dmpewTQ/exec";
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbyWGZEtOjiGNyfBzetxToTtsn36l1ehXCpRaaWUoz4heuHBwpkKPJdGADZdy3CmRlRLrA/exec";
 
 const PROVEEDORES = [
   "Juan Mamani – Challapata",
@@ -546,7 +546,17 @@ async function reintentarPendientes() {
 reintentarPendientes();
 window.addEventListener('online', reintentarPendientes);
 
-document.getElementById('f-fecha').value = new Date().toISOString().slice(0,10);
+// Fecha local del dispositivo en formato YYYY-MM-DD.
+// OJO: new Date().toISOString() convierte a UTC, lo cual en Bolivia (UTC-4)
+// hace que el campo "salte" al día siguiente entre las ~20:00 y 23:59 hora
+// local. Esta función usa la hora local real del celular en su lugar.
+function fechaLocalISO() {
+  const d = new Date();
+  const offsetMs = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - offsetMs).toISOString().slice(0, 10);
+}
+
+document.getElementById('f-fecha').value = fechaLocalISO();
 
 // ── PROVEEDOR DROPDOWN ──
 function filtrarProveedores(q) {
@@ -842,7 +852,7 @@ function nuevoRegistro() {
   document.querySelectorAll('.act-card').forEach(c => c.classList.remove('sel'));
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('sel'));
   document.getElementById('btn-p1').disabled = true;
-  document.getElementById('f-fecha').value = new Date().toISOString().slice(0,10);
+  document.getElementById('f-fecha').value = fechaLocalISO();
   document.getElementById('pe-diferencia-wrap').style.display = 'none';
   document.getElementById('ver-otro-wrap').style.display = 'none';
   ['f-tecnico','f-proveedor-input','f-lote','f-obs',
