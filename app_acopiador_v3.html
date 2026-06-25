@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<title>QUINUA · Registro de Campo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #000000;
+  --surface: #1c1c1c;
+  --surface2: #262626;
+  --surface3: #333333;
+  --surface4: #3d3d3d;
+  --border: #ffffff;
+  --border-soft: rgba(255,255,255,0.22);
+  --text: #ffffff;
+  --text-muted: #b3b3b3;
+  --text-dim: #6e6e6e;
+  --r: 14px;
+  --r-sm: 9px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; display: flex; flex-direction: column; }
+
+/* ── HEADER ── */
+.header { background: var(--surface); border-bottom: 1px solid var(--border-soft); padding: 14px 18px 12px; position: sticky; top: 0; z-index: 50; flex-shrink: 0; }
+.header-row { display: flex; justify-content: space-between; align-items: center; }
+.wordmark { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px; color: var(--text); text-transform: uppercase; }
+.header-screen-name { font-size: 14px; font-weight: 500; color: var(--text-muted); margin-top: 1px; }
+.clock-pill { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text); background: var(--surface3); border: 1px solid var(--border-soft); padding: 4px 10px; border-radius: 20px; }
+.progress-bar { height: 2px; background: var(--surface3); margin-top: 10px; border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--text); border-radius: 2px; transition: width 0.35s ease; }
+
+/* ── SCROLL ── */
+.scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 0 80px; }
+.form-wrap { padding: 22px 18px 0; }
+.screen-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2.5px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 10px; }
+.screen-title { font-size: 20px; font-weight: 700; line-height: 1.25; margin-bottom: 4px; }
+.screen-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.45; }
+
+/* ── FIELDS ── */
+.field { margin-bottom: 16px; }
+.field > label { display: block; font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 6px; }
+.field input, .field select, .field textarea {
+  width: 100%; background: var(--surface2); border: 1.5px solid var(--border-soft); border-radius: var(--r-sm);
+  color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; padding: 12px 14px;
+  outline: none; transition: border-color 0.18s, background 0.18s; appearance: none; -webkit-appearance: none;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--border); background: var(--surface3); }
+.field input::placeholder, .field textarea::placeholder { color: var(--text-dim); }
+.field textarea { min-height: 82px; resize: vertical; line-height: 1.5; }
+.field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23b3b3b3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; cursor: pointer;
+}
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field input.computed { color: var(--text); font-family: 'DM Mono', monospace; font-size: 14px; border-color: var(--border); background: var(--surface3); }
+
+.divider { height: 1px; background: var(--border-soft); margin: 20px 0; }
+.divider-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 14px; margin-top: 4px; }
+
+/* ── ACTIVITY LIST (5 opciones) ── */
+.act-list { display: flex; flex-direction: column; gap: 10px; }
+.act-card {
+  background: var(--surface2); border: 1.5px solid var(--border-soft); border-radius: var(--r);
+  padding: 14px 16px; cursor: pointer; transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  display: flex; align-items: center; gap: 14px; position: relative;
+}
+.act-card:active { transform: scale(0.98); }
+.act-card.sel { border-color: var(--border); background: var(--surface3); }
+.act-icon-wrap {
+  width: 40px; height: 40px; border-radius: 10px; background: var(--surface3); border: 1px solid var(--border-soft);
+  display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0;
+}
+.act-card.sel .act-icon-wrap { background: var(--text); }
+.act-card.sel .act-icon-wrap span { filter: grayscale(1) brightness(0); }
+.act-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.act-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.act-check {
+  position: absolute; top: 50%; right: 14px; transform: translateY(-50%);
+  width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border-soft);
+  display: flex; align-items: center; justify-content: center; font-size: 11px; color: transparent;
+  transition: all 0.15s;
+}
+.act-card.sel .act-check { border-color: var(--border); background: var(--text); color: var(--bg); }
+
+/* ── DEFECT CHIPS (verificación de grano) ── */
+.chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  border: 1.5px solid var(--border-soft); background: var(--surface2); color: var(--text-muted);
+  border-radius: 20px; padding: 9px 14px; font-size: 13px; cursor: pointer; transition: all 0.15s; user-select: none;
+}
+.chip.sel { border-color: var(--border); background: var(--text); color: var(--bg); font-weight: 600; }
+
+/* ── PHOTO UPLOAD ── */
+.photo-zone { border: 1.5px dashed var(--border-soft); border-radius: var(--r); padding: 20px 16px; text-align: center; cursor: pointer; transition: all 0.18s; background: var(--surface2); }
+.photo-zone:active { border-color: var(--border); background: var(--surface3); }
+.photo-zone-icon { font-size: 26px; margin-bottom: 6px; }
+.photo-zone-text { font-size: 13px; color: var(--text-muted); }
+.photo-zone-hint { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+.icon-svg { display: inline-flex; align-items: center; justify-content: center; }
+.icon-svg svg { width: 20px; height: 20px; display: block; }
+.act-icon-wrap .icon-svg svg { width: 22px; height: 22px; }
+.act-card.sel .icon-svg svg { stroke: var(--bg); }
+.photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+.photo-thumb-wrap { position: relative; aspect-ratio: 1; }
+.photo-thumb { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-soft); display: block; }
+.photo-remove { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; background: var(--text); color: var(--bg); font-size: 12px; line-height: 20px; text-align: center; cursor: pointer; border: 2px solid var(--bg); font-weight: 700; }
+#photo-input { display: none; }
+
+/* ── SUMMARY ── */
+.summary-card { background: var(--surface2); border: 1px solid var(--border-soft); border-radius: var(--r); overflow: hidden; margin-bottom: 16px; }
+.summary-head { background: var(--surface3); border-bottom: 1px solid var(--border-soft); padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+.summary-act-label { font-size: 13px; font-weight: 700; color: var(--text); }
+.summary-body { padding: 4px 0; }
+.summary-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 16px; border-bottom: 1px solid var(--border-soft); font-size: 13px; }
+.summary-row:last-child { border-bottom: none; }
+.summary-key { color: var(--text-muted); flex-shrink: 0; margin-right: 12px; }
+.summary-val { font-weight: 500; text-align: right; word-break: break-word; color: var(--text); }
+
+.gps-row { display: flex; gap: 8px; align-items: center; background: var(--surface2); border: 1px solid var(--border-soft); border-radius: var(--r-sm); padding: 10px 13px; margin-bottom: 16px; }
+.gps-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim); flex-shrink: 0; }
+.gps-dot.active { background: var(--text); animation: gpspulse 1.5s infinite; }
+@keyframes gpspulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+.gps-text { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-muted); flex: 1; }
+
+/* ── BUTTONS ── */
+.btn-area { padding: 0 18px 16px; }
+.btn-primary { width: 100%; background: var(--text); color: var(--bg); border: 1px solid var(--text); border-radius: var(--r); padding: 15px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity 0.15s, transform 0.1s; letter-spacing: 0.2px; }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.25; cursor: not-allowed; }
+.btn-secondary { width: 100%; background: transparent; color: var(--text); border: 1.5px solid var(--border-soft); border-radius: var(--r); padding: 13px; font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; margin-top: 10px; transition: border-color 0.15s; }
+.btn-secondary:active { border-color: var(--border); }
+
+/* ── NAV ── */
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border-soft); display: flex; z-index: 50; padding-bottom: env(safe-area-inset-bottom, 0); }
+.nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 8px; cursor: pointer; color: var(--text-dim); font-size: 10px; transition: color 0.15s; border: none; background: none; font-family: 'DM Sans', sans-serif; }
+.nav-btn.active { color: var(--text); font-weight: 700; }
+.nav-btn-icon { font-size: 19px; }
+
+.screen { display: none; }
+.screen.active { display: flex; flex-direction: column; height: 100%; }
+
+/* ── SUCCESS ── */
+.success-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 24px; text-align: center; }
+.success-ring { width: 88px; height: 88px; border-radius: 50%; border: 2px solid var(--border); background: var(--surface3); display: flex; align-items: center; justify-content: center; font-size: 38px; margin-bottom: 24px; animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes popIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+.success-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.success-sub { font-size: 14px; color: var(--text-muted); line-height: 1.55; margin-bottom: 28px; }
+.success-ref { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); background: var(--surface3); border: 1px solid var(--border-soft); padding: 8px 18px; border-radius: 20px; margin-bottom: 32px; }
+
+/* ── HISTORY ── */
+.hist-item { background: var(--surface2); border: 1px solid var(--border-soft); border-radius: var(--r-sm); padding: 14px 16px; margin-bottom: 10px; }
+.hist-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.hist-name { font-size: 13px; font-weight: 600; }
+.hist-time { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-muted); }
+.hist-detail { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+.tag { padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: 0.3px; display: inline-block; border: 1px solid var(--border); color: var(--text); }
+.tag-despacho { background: var(--surface2); }
+.tag-muestras { background: var(--surface3); }
+.tag-pesaje { background: var(--surface4); }
+.tag-verificacion { background: #474747; }
+.tag-cotizacion { background: #525252; }
+
+.empty-state { text-align: center; padding: 56px 24px; color: var(--text-dim); }
+.empty-state-icon { font-size: 38px; margin-bottom: 12px; }
+.empty-state-text { font-size: 14px; }
+
+/* dropdown lista proveedor */
+.dropdown-list { display:none; position:absolute; left:0; right:0; top:calc(100% + 4px); background:var(--surface3); border:1.5px solid var(--border-soft); border-radius:var(--r-sm); z-index:100; max-height:200px; overflow-y:auto; }
+.dropdown-item { padding:11px 14px; font-size:14px; cursor:pointer; border-bottom:1px solid var(--border-soft); color: var(--text); }
+.dropdown-item:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<!-- Mecanismo de envío de respaldo: form nativo + iframe oculto.
+     Esto NO depende de fetch/CORS — es la técnica clásica y más compatible
+     para mandar datos a Google Apps Script desde cualquier navegador,
+     incluso cuando fetch() falla por razones de red que no podemos controlar. -->
+<iframe name="envio-oculto" id="envio-oculto" style="display:none;"></iframe>
+<form id="form-envio-nativo" method="POST" target="envio-oculto" style="display:none;">
+  <input type="hidden" name="payload" id="payload-nativo">
+</form>
+
+<!-- ══════════ SCREEN: REGISTRO ══════════ -->
+<div class="screen active" id="screen-registro">
+
+  <div class="header">
+    <div class="header-row">
+      <div>
+        <div class="wordmark">QUINUA · Campo</div>
+        <div class="header-screen-name" id="hdr-title">Nuevo registro</div>
+      </div>
+      <div class="clock-pill" id="clock">--:--</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress" style="width:20%"></div></div>
+  </div>
+
+  <div class="scroll-area" id="scroll-area">
+
+    <!-- PASO 1: IDENTIFICACIÓN -->
+    <div id="paso1" class="form-wrap">
+      <div class="screen-label">Paso 1 de 4 · Identificación</div>
+      <div class="screen-title">Datos del registro</div>
+      <div class="screen-sub">Completa los campos de identificación y elige el tipo de actividad.</div>
+
+      <div class="field">
+        <label>Fecha de actividad</label>
+        <input type="date" id="f-fecha">
+      </div>
+      <div class="field">
+        <label>Nombre del técnico</label>
+        <input type="text" id="f-tecnico" placeholder="Nombre completo del técnico">
+      </div>
+      <div class="field">
+        <label>Proveedor</label>
+        <div style="position:relative;">
+          <input type="text" id="f-proveedor-input" placeholder="Buscar o escribir nombre..." autocomplete="off" oninput="filtrarProveedores(this.value)" onfocus="mostrarDropdownProv()" onblur="setTimeout(ocultarDropdownProv,200)">
+          <div id="proveedor-dropdown" class="dropdown-list"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Partida / Lote</label>
+        <input type="text" id="f-lote" placeholder="Ej: LOTE-045 / PAR-2024-12">
+      </div>
+
+      <div class="field">
+        <label>Tipo de actividad</label>
+        <div class="act-list" id="act-list">
+          <div class="act-card" onclick="selAct('despacho',this)">
+            <div class="act-icon-wrap"><span>🚚</span></div>
+            <div><div class="act-name">Despacho</div><div class="act-desc">Carguío y envío de producto</div></div>
+            <div class="act-check">✓</div>
+          </div>
+          <div class="act-card" onclick="selAct('muestras',this)">
+            <div class="act-icon-wrap"><span class="icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="19"/><line x1="8" y1="2" x2="16" y2="2"/><path d="M12 19 L9.5 15.5 M12 19 L14.5 15.5"/><line x1="9" y1="8" x2="11" y2="8"/><line x1="9" y1="12" x2="11" y2="12"/></svg></span></div>
+            <div><div class="act-name">Muestras</div><div class="act-desc">Toma de muestras</div></div>
+            <div class="act-check">✓</div>
+          </div>
+          <div class="act-card" onclick="selAct('pesaje',this)">
+            <div class="act-icon-wrap"><span class="icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="14" width="18" height="5" rx="1"/><line x1="12" y1="14" x2="12" y2="8"/><rect x="8" y="3" width="8" height="5" rx="1"/></svg></span></div>
+            <div><div class="act-name">Pesaje</div><div class="act-desc">Verificación de peso</div></div>
+            <div class="act-check">✓</div>
+          </div>
+          <div class="act-card" onclick="selAct('verificacion',this)">
+            <div class="act-icon-wrap"><span>🔍</span></div>
+            <div><div class="act-name">Verificación de grano</div><div class="act-desc">Control de calidad del grano</div></div>
+            <div class="act-check">✓</div>
+          </div>
+          <div class="act-card" onclick="selAct('cotizacion',this)">
+            <div class="act-icon-wrap"><span>💲</span></div>
+            <div><div class="act-name">Cotización de precios</div><div class="act-desc">Precio y disponibilidad</div></div>
+            <div class="act-check">✓</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-area" style="padding: 8px 0 0;">
+        <button class="btn-primary" id="btn-p1" onclick="irPaso(2)" disabled>Continuar →</button>
+      </div>
+    </div>
+
+    <!-- PASO 2: DETALLE -->
+    <div id="paso2" class="form-wrap" style="display:none">
+      <div class="screen-label">Paso 2 de 4 · Detalle de actividad</div>
+      <div class="screen-title" id="p2-title">Datos específicos</div>
+      <div class="screen-sub" id="p2-sub">Completa la información correspondiente.</div>
+
+      <!-- DESPACHO -->
+      <div id="form-despacho" style="display:none">
+        <div class="field">
+          <label>Origen del producto</label>
+          <input type="text" id="d-origen" placeholder="Comunidad / zona de origen">
+        </div>
+        <div class="field">
+          <label>Tipo de quinua</label>
+          <select id="d-tipo-quinua">
+            <option value="">Seleccionar...</option>
+            <option>Blanca</option><option>Roja</option><option>Negra</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Cantidad aprox. (qq)</label><input type="number" id="d-cantidad" placeholder="120" inputmode="decimal"></div>
+          <div class="field"><label>Peso (kg)</label><input type="number" id="d-peso-kg" placeholder="5520" inputmode="decimal"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Transportista</label><input type="text" id="d-transportista" placeholder="Nombre del conductor"></div>
+          <div class="field"><label>Placa</label><input type="text" id="d-placa" placeholder="2345 PBJ" style="text-transform:uppercase"></div>
+        </div>
+        <div class="field">
+          <label>Destino</label>
+          <input type="text" id="d-destino" placeholder="Planta / almacén destino">
+        </div>
+      </div>
+
+      <!-- MUESTRAS -->
+      <div id="form-muestras" style="display:none">
+        <div class="field">
+          <label>Peso de la muestra (kg)</label>
+          <input type="number" id="mu-peso-kg" placeholder="0.5" inputmode="decimal" step="0.01">
+        </div>
+        <div class="field">
+          <label>Comunidad</label>
+          <input type="text" id="mu-comunidad" placeholder="Comunidad de origen">
+        </div>
+        <div class="field">
+          <label>Tipo de quinua</label>
+          <select id="mu-tipo-quinua">
+            <option value="">Seleccionar...</option>
+            <option>Blanca</option><option>Roja</option><option>Negra</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- PESAJE -->
+      <div id="form-pesaje" style="display:none">
+        <div class="field">
+          <label>Productor / responsable de la verificación</label>
+          <input type="text" id="pe-responsable" placeholder="Nombre completo">
+        </div>
+        <div class="field">
+          <label>Peso marcado en balanza (kg)</label>
+          <input type="number" id="pe-peso-balanza" placeholder="5500" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>¿El peso es correcto respecto a lo enviado?</label>
+          <select id="pe-peso-correcto" onchange="toggleDiferenciaPeso()">
+            <option value="">Seleccionar...</option>
+            <option value="correcto">✅ Correcto, coincide</option>
+            <option value="falta">⚠️ Con diferencia — falta peso</option>
+            <option value="excede">⚠️ Con diferencia — excede peso</option>
+          </select>
+        </div>
+        <div class="field" id="pe-diferencia-wrap" style="display:none">
+          <label>Diferencia detectada (kg)</label>
+          <input type="number" id="pe-diferencia-kg" placeholder="0" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>Tipo de quinua</label>
+          <select id="pe-tipo-quinua">
+            <option value="">Seleccionar...</option>
+            <option>Blanca</option><option>Roja</option><option>Negra</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- VERIFICACIÓN DE GRANO -->
+      <div id="form-verificacion" style="display:none">
+        <div class="field">
+          <label>Defectos observados (selecciona los que correspondan)</label>
+          <div class="chip-grid" id="defectos-grid"></div>
+        </div>
+        <div class="field" id="ver-otro-wrap" style="display:none">
+          <label>Detalle de "Otro"</label>
+          <input type="text" id="ver-otro-detalle" placeholder="Especifica el defecto observado">
+        </div>
+        <div class="field">
+          <label>Resultado de la verificación</label>
+          <select id="ver-resultado">
+            <option value="">Seleccionar...</option>
+            <option value="aprobado">✅ Aprobado</option>
+            <option value="observado">⚠️ Observado — requiere revisión</option>
+            <option value="rechazado">❌ Rechazado</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- COTIZACIÓN -->
+      <div id="form-cotizacion" style="display:none">
+        <div class="field">
+          <label>Nombre del proveedor</label>
+          <input type="text" id="co-proveedor" placeholder="Nombre del proveedor cotizado">
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Precio Challapata (Bs/qq)</label><input type="number" id="co-precio-challapata" placeholder="850" inputmode="decimal"></div>
+          <div class="field"><label>Precio oferta puesto planta (Bs/qq)</label><input type="number" id="co-precio-planta" placeholder="870" inputmode="decimal"></div>
+        </div>
+        <div class="field">
+          <label>Cantidad existente (qq)</label>
+          <input type="number" id="co-cantidad" placeholder="300" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>Tipo de quinua</label>
+          <select id="co-tipo-quinua">
+            <option value="">Seleccionar...</option>
+            <option>Blanca</option><option>Roja</option><option>Negra</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="btn-area" style="padding: 16px 0 0;">
+        <button class="btn-primary" onclick="irPaso(3)">Continuar →</button>
+        <button class="btn-secondary" onclick="irPaso(1)">← Atrás</button>
+      </div>
+    </div>
+
+    <!-- PASO 3: EVIDENCIA -->
+    <div id="paso3" class="form-wrap" style="display:none">
+      <div class="screen-label">Paso 3 de 4 · Evidencia</div>
+      <div class="screen-title">Fotos y observaciones</div>
+      <div class="screen-sub">Adjunta fotos de evidencia y agrega notas si es necesario.</div>
+
+      <div class="field">
+        <label>Fotos de evidencia</label>
+        <div class="photo-zone" onclick="document.getElementById('photo-input').click()">
+          <div class="photo-zone-icon">📷</div>
+          <div class="photo-zone-text">Toca para tomar foto o elegir de galería</div>
+          <div class="photo-zone-hint">Toma una foto nueva o elige una existente de tu galería · hasta 5 imágenes</div>
+        </div>
+        <input type="file" id="photo-input" accept="image/*" multiple onchange="agregarFotos(this)">
+        <div class="photo-grid" id="photo-grid"></div>
+      </div>
+
+      <div class="field">
+        <label>Observaciones generales</label>
+        <textarea id="f-obs" placeholder="Notas adicionales, irregularidades, condiciones especiales del campo..."></textarea>
+      </div>
+
+      <div class="btn-area" style="padding: 16px 0 0;">
+        <button class="btn-primary" onclick="irPaso(4)">Revisar y confirmar →</button>
+        <button class="btn-secondary" onclick="irPaso(2)">← Atrás</button>
+      </div>
+    </div>
+
+    <!-- PASO 4: CONFIRMACIÓN -->
+    <div id="paso4" class="form-wrap" style="display:none">
+      <div class="screen-label">Paso 4 de 4 · Confirmar</div>
+      <div class="screen-title">Revisa y envía</div>
+      <div class="screen-sub">Verifica los datos antes de guardar el registro.</div>
+
+      <div class="summary-card" id="resumen"></div>
+
+      <div class="gps-row" id="gps-row">
+        <div class="gps-dot active" id="gps-dot"></div>
+        <div class="gps-text" id="gps-text">Obteniendo ubicación GPS...</div>
+      </div>
+
+      <div id="fotos-count" style="font-size:12px; color:var(--text-muted); margin-bottom:16px;"></div>
+
+      <div class="btn-area" style="padding: 0;">
+        <button class="btn-primary" id="btn-enviar" onclick="enviar()">📤 Enviar registro</button>
+        <button class="btn-secondary" onclick="irPaso(3)">← Corregir</button>
+      </div>
+    </div>
+
+    <!-- PASO 5: ÉXITO -->
+    <div id="paso5" style="display:none; flex:1; flex-direction:column;">
+      <div class="success-wrap">
+        <div class="success-ring">✅</div>
+        <div class="success-title">¡Registro enviado!</div>
+        <div class="success-sub">Los datos fueron guardados exitosamente.<br>El supervisor puede verlos en tiempo real.</div>
+        <div class="success-ref" id="ref-display">REF: —</div>
+        <button class="btn-primary" style="max-width:280px;" onclick="nuevoRegistro()">+ Nuevo registro</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════ SCREEN: HISTORIAL ══════════ -->
+<div class="screen" id="screen-historial">
+  <div class="header">
+    <div class="header-row">
+      <div>
+        <div class="wordmark">QUINUA · Campo</div>
+        <div class="header-screen-name">Mis registros</div>
+      </div>
+      <div class="clock-pill" id="hist-badge">0 hoy</div>
+    </div>
+  </div>
+  <div class="scroll-area" style="padding: 16px 18px 80px;" id="hist-list">
+    <div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">No hay registros aún</div></div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-reg" onclick="cambiarPantalla('registro')"><span class="nav-btn-icon">📝</span>Registrar</button>
+  <button class="nav-btn" id="nav-hist" onclick="cambiarPantalla('historial')"><span class="nav-btn-icon">📋</span>Historial</button>
+</nav>
+
+<script>
+// ───────────────────────────────────────────
+//  CONFIGURACIÓN  ← no tocar a menos que cambie el backend
+// ───────────────────────────────────────────
+// ⚠️ IMPORTANTE: reemplaza esta URL con la que te dé tu propio Apps Script
+// (Implementar → Nueva implementación → Aplicación web → copiar URL /exec)
+// Debe ser la MISMA URL que pongas en dashboard_supervisor.html
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbyWGZEtOjiGNyfBzetxToTtsn36l1ehXCpRaaWUoz4heuHBwpkKPJdGADZdy3CmRlRLrA/exec";
+
+const PROVEEDORES = [
+  "Juan Mamani – Challapata",
+  "Rosa Quispe – Salinas de Garci Mendoza",
+  "Efraín Choque – Llica",
+  "Carmen Flores – Uyuni",
+  "Pedro Condori – Coipasa",
+  "María Callisaya – Sabaya",
+  "Tomás Villca – Pampa Aullagas",
+  "Juana Apaza – San Pedro de Quemes",
+  // → Agregar más proveedores aquí
+];
+
+const DEFECTOS = [
+  { id:'manchado', label:'Grano manchado' },
+  { id:'partido', label:'Grano partido' },
+  { id:'mal_zarandeado', label:'Lote mal zarandeado' },
+  { id:'piedras', label:'Exceso de piedras' },
+  { id:'palitos', label:'Presencia de palitos' },
+  { id:'inmaduro', label:'Grano inmaduro / verde' },
+  { id:'mezcla', label:'Mezcla de variedades' },
+  { id:'olor', label:'Olor extraño' },
+  { id:'humedo', label:'Humedad visible' },
+  { id:'otro', label:'Otro' },
+];
+// ───────────────────────────────────────────
+
+let estado = { paso: 1, actividad: null, gps: null, defectosSel: [] };
+let fotos = [];
+let registros = JSON.parse(localStorage.getItem('qcampo_v3') || '[]');
+
+function tick() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' });
+}
+tick(); setInterval(tick, 15000);
+
+// ── REINTENTO DE PENDIENTES ──
+// Si algún registro quedó sin enviar (sin señal en el campo), se reintenta
+// enviar automáticamente cada vez que se abre la app o recupera conexión.
+async function reintentarPendientes() {
+  const pendientes = registros.filter(r => r.pendiente);
+  if (!pendientes.length) return;
+  for (const r of pendientes) {
+    let ok = false;
+    try {
+      document.getElementById('payload-nativo').value = JSON.stringify(r);
+      document.getElementById('form-envio-nativo').action = SHEET_URL;
+      document.getElementById('form-envio-nativo').submit();
+      await new Promise(res => setTimeout(res, 2000));
+      const verResp = await fetch(SHEET_URL + '?t=' + Date.now());
+      const verData = await verResp.json();
+      ok = Array.isArray(verData) && verData.some(x => x.ref === r.ref);
+    } catch (e) {
+      try {
+        const resp = await fetch(SHEET_URL, { method: 'POST', body: JSON.stringify(r) });
+        const json = await resp.json();
+        ok = !!json.ok;
+      } catch (e2) { /* sigue sin poder enviarse, se reintenta después */ }
+    }
+    if (ok) {
+      delete r.pendiente;
+      delete r.fotos;
+      delete r.error_detalle;
+    }
+  }
+  localStorage.setItem('qcampo_v3', JSON.stringify(registros.slice(0, 200)));
+  renderHistorial();
+}
+reintentarPendientes();
+window.addEventListener('online', reintentarPendientes);
+
+// Fecha local del dispositivo en formato YYYY-MM-DD.
+// OJO: new Date().toISOString() convierte a UTC, lo cual en Bolivia (UTC-4)
+// hace que el campo "salte" al día siguiente entre las ~20:00 y 23:59 hora
+// local. Esta función usa la hora local real del celular en su lugar.
+function fechaLocalISO() {
+  const d = new Date();
+  const offsetMs = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - offsetMs).toISOString().slice(0, 10);
+}
+
+document.getElementById('f-fecha').value = fechaLocalISO();
+
+// ── PROVEEDOR DROPDOWN ──
+function filtrarProveedores(q) {
+  const dd = document.getElementById('proveedor-dropdown');
+  const lista = PROVEEDORES.filter(a => a.toLowerCase().includes(q.toLowerCase()));
+  if (!lista.length || !q) { dd.style.display = 'none'; return; }
+  dd.innerHTML = lista.map(a => `<div class="dropdown-item" onclick="elegirProveedor('${a}')">${a}</div>`).join('');
+  dd.style.display = 'block';
+}
+function mostrarDropdownProv() { const v = document.getElementById('f-proveedor-input').value; if (v) filtrarProveedores(v); }
+function ocultarDropdownProv() { document.getElementById('proveedor-dropdown').style.display = 'none'; }
+function elegirProveedor(a) {
+  document.getElementById('f-proveedor-input').value = a;
+  document.getElementById('proveedor-dropdown').style.display = 'none';
+  validarPaso1();
+}
+
+// ── DEFECTOS (chips) ──
+function renderDefectos() {
+  const grid = document.getElementById('defectos-grid');
+  grid.innerHTML = DEFECTOS.map(d => `<div class="chip" data-id="${d.id}" onclick="toggleDefecto('${d.id}', this)">${d.label}</div>`).join('');
+}
+renderDefectos();
+function toggleDefecto(id, el) {
+  el.classList.toggle('sel');
+  const i = estado.defectosSel.indexOf(id);
+  if (i === -1) estado.defectosSel.push(id); else estado.defectosSel.splice(i, 1);
+  document.getElementById('ver-otro-wrap').style.display = estado.defectosSel.includes('otro') ? 'block' : 'none';
+}
+
+// ── PESAJE: mostrar diferencia ──
+function toggleDiferenciaPeso() {
+  const v = document.getElementById('pe-peso-correcto').value;
+  document.getElementById('pe-diferencia-wrap').style.display = (v === 'falta' || v === 'excede') ? 'block' : 'none';
+}
+
+// ── ACTIVIDAD ──
+function selAct(tipo, el) {
+  document.querySelectorAll('.act-card').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  estado.actividad = tipo;
+  validarPaso1();
+}
+
+function validarPaso1() {
+  const ok = document.getElementById('f-tecnico').value.trim()
+    && document.getElementById('f-proveedor-input').value.trim()
+    && document.getElementById('f-lote').value.trim()
+    && estado.actividad;
+  document.getElementById('btn-p1').disabled = !ok;
+}
+['f-tecnico','f-lote'].forEach(id => document.getElementById(id).addEventListener('input', validarPaso1));
+document.getElementById('f-proveedor-input').addEventListener('input', validarPaso1);
+
+// ── FOTOS ──
+function agregarFotos(input) {
+  Array.from(input.files).slice(0, 5 - fotos.length).forEach(file => {
+    comprimirImagen(file, 1280, 0.7).then(dataUrl => {
+      fotos.push(dataUrl);
+      renderFotosGrid();
+    });
+  });
+  input.value = '';
+}
+
+// Redimensiona y comprime la imagen en el propio celular antes de guardarla,
+// para que el envío sea rápido incluso con señal débil en el campo.
+function comprimirImagen(file, maxAncho, calidad) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxAncho) {
+          height = Math.round(height * (maxAncho / width));
+          width = maxAncho;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', calidad));
+      };
+      img.onerror = () => resolve(e.target.result); // si falla, usar original
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function quitarFoto(idx) { fotos.splice(idx, 1); renderFotosGrid(); }
+function renderFotosGrid() {
+  document.getElementById('photo-grid').innerHTML = fotos.map((src, i) => `
+    <div class="photo-thumb-wrap"><img src="${src}" class="photo-thumb"><div class="photo-remove" onclick="quitarFoto(${i})">×</div></div>`).join('');
+}
+
+// ── TÍTULOS / ÍCONOS ──
+const ICONO_CHUZO = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="19"/><line x1="8" y1="2" x2="16" y2="2"/><path d="M12 19 L9.5 15.5 M12 19 L14.5 15.5"/><line x1="9" y1="8" x2="11" y2="8"/><line x1="9" y1="12" x2="11" y2="12"/></svg>';
+const ICONO_BALANZA = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="14" width="18" height="5" rx="1"/><line x1="12" y1="14" x2="12" y2="8"/><rect x="8" y="3" width="8" height="5" rx="1"/></svg>';
+
+const ICONOS = {
+  despacho: '🚚',
+  muestras: '<span class="icon-svg">' + ICONO_CHUZO + '</span>',
+  pesaje: '<span class="icon-svg">' + ICONO_BALANZA + '</span>',
+  verificacion: '🔍',
+  cotizacion: '💲',
+};
+const LABELS = {
+  despacho: 'Despacho de producto',
+  muestras: 'Toma de muestras',
+  pesaje: 'Verificación de pesaje',
+  verificacion: 'Verificación de grano',
+  cotizacion: 'Cotización de precios',
+};
+const SUBTITULOS = {
+  despacho: 'Datos del carguío, transporte y destino.',
+  muestras: 'Toma de muestras',
+  pesaje: 'Verificación de peso contra lo enviado.',
+  verificacion: 'Control de calidad del grano.',
+  cotizacion: 'Precio ofertado y disponibilidad.',
+};
+
+// ── PASOS ──
+function irPaso(n) {
+  [1,2,3,4].forEach(i => document.getElementById('paso' + i).style.display = 'none');
+  document.getElementById('paso5').style.display = 'none';
+  if (n <= 4) document.getElementById('paso' + n).style.display = 'block';
+  else document.getElementById('paso5').style.display = 'flex';
+
+  estado.paso = n;
+  document.getElementById('progress').style.width = [20, 50, 75, 95, 100][n - 1] + '%';
+  document.getElementById('hdr-title').textContent = n <= 4
+    ? ['Identificación', 'Detalle de actividad', 'Evidencia', 'Confirmar y enviar'][n-1]
+    : '¡Enviado!';
+
+  if (n === 2) mostrarFormAct();
+  if (n === 4) { construirResumen(); obtenerGPS(); }
+  document.getElementById('scroll-area').scrollTop = 0;
+}
+
+function mostrarFormAct() {
+  ['despacho','muestras','pesaje','verificacion','cotizacion'].forEach(f => document.getElementById('form-' + f).style.display = 'none');
+  if (estado.actividad) {
+    document.getElementById('form-' + estado.actividad).style.display = 'block';
+    document.getElementById('p2-title').innerHTML = (ICONOS[estado.actividad] || '') + ' ' + (LABELS[estado.actividad] || '');
+    document.getElementById('p2-sub').textContent = SUBTITULOS[estado.actividad];
+  }
+}
+
+function v(id) { const el = document.getElementById(id); return el ? (el.value || '').trim() : ''; }
+
+function construirResumen() {
+  const filas = [
+    ['Fecha', v('f-fecha')],
+    ['Técnico', v('f-tecnico')],
+    ['Proveedor', v('f-proveedor-input')],
+    ['Partida / Lote', v('f-lote')],
+  ];
+
+  if (estado.actividad === 'despacho') {
+    if (v('d-origen')) filas.push(['Origen', v('d-origen')]);
+    if (v('d-tipo-quinua')) filas.push(['Tipo quinua', v('d-tipo-quinua')]);
+    if (v('d-cantidad')) filas.push(['Cantidad', v('d-cantidad') + ' qq']);
+    if (v('d-peso-kg')) filas.push(['Peso', v('d-peso-kg') + ' kg']);
+    if (v('d-transportista')) filas.push(['Transportista', v('d-transportista')]);
+    if (v('d-placa')) filas.push(['Placa', v('d-placa')]);
+    if (v('d-destino')) filas.push(['Destino', v('d-destino')]);
+  } else if (estado.actividad === 'muestras') {
+    if (v('mu-peso-kg')) filas.push(['Peso muestra', v('mu-peso-kg') + ' kg']);
+    if (v('mu-comunidad')) filas.push(['Comunidad', v('mu-comunidad')]);
+    if (v('mu-tipo-quinua')) filas.push(['Tipo quinua', v('mu-tipo-quinua')]);
+  } else if (estado.actividad === 'pesaje') {
+    if (v('pe-responsable')) filas.push(['Responsable', v('pe-responsable')]);
+    if (v('pe-peso-balanza')) filas.push(['Peso balanza', v('pe-peso-balanza') + ' kg']);
+    if (v('pe-peso-correcto')) filas.push(['¿Peso correcto?', document.getElementById('pe-peso-correcto').selectedOptions[0].textContent]);
+    if (v('pe-diferencia-kg')) filas.push(['Diferencia', v('pe-diferencia-kg') + ' kg']);
+    if (v('pe-tipo-quinua')) filas.push(['Tipo quinua', v('pe-tipo-quinua')]);
+  } else if (estado.actividad === 'verificacion') {
+    const defLabels = estado.defectosSel.map(id => DEFECTOS.find(d => d.id === id)?.label).filter(Boolean);
+    filas.push(['Defectos', defLabels.length ? defLabels.join(', ') : 'Ninguno observado']);
+    if (v('ver-otro-detalle')) filas.push(['Detalle otro', v('ver-otro-detalle')]);
+    if (v('ver-resultado')) filas.push(['Resultado', document.getElementById('ver-resultado').selectedOptions[0].textContent]);
+  } else if (estado.actividad === 'cotizacion') {
+    if (v('co-proveedor')) filas.push(['Proveedor cotizado', v('co-proveedor')]);
+    if (v('co-precio-challapata')) filas.push(['Precio Challapata', v('co-precio-challapata') + ' Bs/qq']);
+    if (v('co-precio-planta')) filas.push(['Precio puesto planta', v('co-precio-planta') + ' Bs/qq']);
+    if (v('co-cantidad')) filas.push(['Cantidad existente', v('co-cantidad') + ' qq']);
+    if (v('co-tipo-quinua')) filas.push(['Tipo quinua', v('co-tipo-quinua')]);
+  }
+
+  if (v('f-obs')) filas.push(['Observaciones', v('f-obs')]);
+
+  document.getElementById('resumen').innerHTML = `
+    <div class="summary-head">
+      <span style="font-size:20px;">${ICONOS[estado.actividad] || '📋'}</span>
+      <span class="summary-act-label">${LABELS[estado.actividad] || estado.actividad}</span>
+    </div>
+    <div class="summary-body">
+      ${filas.map(([k,val]) => `<div class="summary-row"><span class="summary-key">${k}</span><span class="summary-val">${val || '—'}</span></div>`).join('')}
+    </div>`;
+
+  const n = fotos.length;
+  document.getElementById('fotos-count').textContent = n ? `📷 ${n} foto${n > 1 ? 's' : ''} adjunta${n > 1 ? 's' : ''}` : '📷 Sin fotos adjuntas';
+}
+
+function obtenerGPS() {
+  if (!navigator.geolocation) {
+    document.getElementById('gps-text').textContent = 'GPS no disponible en este dispositivo';
+    document.getElementById('gps-dot').classList.remove('active');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(pos => {
+    estado.gps = { lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) };
+    document.getElementById('gps-text').textContent = `${estado.gps.lat}, ${estado.gps.lng}`;
+    document.getElementById('gps-dot').classList.add('active');
+  }, () => {
+    document.getElementById('gps-text').textContent = 'Ubicación no disponible';
+    document.getElementById('gps-dot').classList.remove('active');
+  });
+}
+
+async function enviar() {
+  const btn = document.getElementById('btn-enviar');
+  btn.disabled = true; btn.textContent = '⏳ Enviando...';
+
+  const datos = {
+    timestamp: new Date().toISOString(),
+    fecha: v('f-fecha'),
+    hora: new Date().toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' }),
+    tecnico: v('f-tecnico'),
+    proveedor: v('f-proveedor-input'),
+    partida_lote: v('f-lote'),
+    actividad: estado.actividad,
+    gps_lat: estado.gps?.lat || '',
+    gps_lng: estado.gps?.lng || '',
+    observaciones: v('f-obs'),
+    fotos_count: fotos.length,
+    // Despacho
+    d_origen: v('d-origen'), d_tipo_quinua: v('d-tipo-quinua'), d_cantidad_qq: v('d-cantidad'),
+    d_peso_kg: v('d-peso-kg'), d_transportista: v('d-transportista'), d_placa: v('d-placa'), d_destino: v('d-destino'),
+    // Muestras
+    mu_peso_kg: v('mu-peso-kg'), mu_comunidad: v('mu-comunidad'), mu_tipo_quinua: v('mu-tipo-quinua'),
+    // Pesaje
+    pe_responsable: v('pe-responsable'), pe_peso_balanza: v('pe-peso-balanza'),
+    pe_peso_correcto: v('pe-peso-correcto'), pe_diferencia_kg: v('pe-diferencia-kg'), pe_tipo_quinua: v('pe-tipo-quinua'),
+    // Verificación de grano
+    ver_defectos: estado.defectosSel.join(', '), ver_otro_detalle: v('ver-otro-detalle'), ver_resultado: v('ver-resultado'),
+    // Cotización
+    co_proveedor: v('co-proveedor'), co_precio_challapata: v('co-precio-challapata'),
+    co_precio_planta: v('co-precio-planta'), co_cantidad_qq: v('co-cantidad'), co_tipo_quinua: v('co-tipo-quinua'),
+  };
+
+  const ref = estado.actividad.toUpperCase().slice(0,4) + '-' + Date.now().toString().slice(-6);
+  datos.ref = ref;
+  datos.fotos = fotos; // se guarda junto al registro local para poder reintentar el envío completo si falla
+
+  // Guardamos copia local primero (respaldo si falla el envío)
+  registros.unshift(datos);
+  localStorage.setItem('qcampo_v3', JSON.stringify(registros.slice(0, 200)));
+
+  let enviado = false;
+  let errorDetalle = '';
+
+  // MÉTODO PRINCIPAL: formulario HTML nativo + iframe oculto.
+  // No depende de fetch/CORS — es la técnica más compatible que existe
+  // para mandar datos a Apps Script desde cualquier navegador.
+  try {
+    document.getElementById('payload-nativo').value = JSON.stringify(datos);
+    document.getElementById('form-envio-nativo').action = SHEET_URL;
+    document.getElementById('form-envio-nativo').submit();
+
+    // El envío por iframe no nos deja leer la respuesta directamente,
+    // así que esperamos un momento y verificamos de verdad consultando
+    // los datos (GET, que ya confirmamos que funciona siempre) para ver
+    // si nuestro "ref" recién enviado ya aparece ahí.
+    await new Promise(r => setTimeout(r, 2000));
+    try {
+      const verResp = await fetch(SHEET_URL + '?t=' + Date.now());
+      const verData = await verResp.json();
+      enviado = Array.isArray(verData) && verData.some(r => r.ref === ref);
+      if (!enviado) errorDetalle = 'el envío no se pudo confirmar en el servidor';
+    } catch (eVer) {
+      // Si no podemos ni verificar, probamos el método fetch directo como
+      // segunda opción antes de rendirnos.
+      errorDetalle = 'no se pudo verificar: ' + (eVer.message || eVer.toString());
+    }
+  } catch (eForm) {
+    errorDetalle = 'form nativo falló: ' + (eForm.message || eForm.toString());
+  }
+
+  // MÉTODO DE RESPALDO: si el form nativo no se pudo verificar, intentamos
+  // fetch directo como segunda opción (puede funcionar en otros casos).
+  if (!enviado) {
+    try {
+      const resp = await fetch(SHEET_URL, { method: 'POST', body: JSON.stringify(datos) });
+      const json = await resp.json();
+      enviado = !!json.ok;
+      if (enviado) errorDetalle = '';
+    } catch (e) {
+      // Mantenemos el errorDetalle ya capturado del método principal
+    }
+  }
+
+  if (!enviado) {
+    // Marcamos el registro local como pendiente de sincronizar
+    registros[0].pendiente = true;
+    registros[0].error_detalle = errorDetalle;
+    localStorage.setItem('qcampo_v3', JSON.stringify(registros.slice(0, 200)));
+    document.getElementById('ref-display').textContent = 'REF: ' + ref + ' (sin conexión: ' + errorDetalle + ')';
+  } else {
+    // Ya está a salvo en Sheets/Drive — quitamos las fotos pesadas del localStorage
+    delete registros[0].fotos;
+    localStorage.setItem('qcampo_v3', JSON.stringify(registros.slice(0, 200)));
+    document.getElementById('ref-display').textContent = 'REF: ' + ref;
+  }
+
+  irPaso(5);
+  btn.disabled = false;
+}
+
+function nuevoRegistro() {
+  estado = { paso: 1, actividad: null, gps: null, defectosSel: [] };
+  fotos = [];
+  document.getElementById('photo-grid').innerHTML = '';
+  document.querySelectorAll('.act-card').forEach(c => c.classList.remove('sel'));
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('sel'));
+  document.getElementById('btn-p1').disabled = true;
+  document.getElementById('f-fecha').value = fechaLocalISO();
+  document.getElementById('pe-diferencia-wrap').style.display = 'none';
+  document.getElementById('ver-otro-wrap').style.display = 'none';
+  ['f-tecnico','f-proveedor-input','f-lote','f-obs',
+   'd-origen','d-cantidad','d-peso-kg','d-transportista','d-placa','d-destino',
+   'mu-peso-kg','mu-comunidad',
+   'pe-responsable','pe-peso-balanza','pe-diferencia-kg',
+   'ver-otro-detalle',
+   'co-proveedor','co-precio-challapata','co-precio-planta','co-cantidad'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  ['d-tipo-quinua','mu-tipo-quinua','pe-peso-correcto','pe-tipo-quinua','ver-resultado','co-tipo-quinua'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  irPaso(1);
+}
+
+function renderHistorial() {
+  const hoy = new Date().toLocaleDateString('es-BO');
+  const hoyN = registros.filter(r => new Date(r.timestamp).toLocaleDateString('es-BO') === hoy).length;
+  document.getElementById('hist-badge').textContent = hoyN + ' hoy';
+  const names = { despacho:'🚚 Despacho', muestras:'Toma de muestras', pesaje:'Pesaje', verificacion:'🔍 Verificación', cotizacion:'💲 Cotización' };
+  const el = document.getElementById('hist-list');
+  if (!registros.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">No hay registros aún</div></div>';
+    return;
+  }
+  el.innerHTML = registros.slice(0, 40).map(r => {
+    const detalles = [];
+    if (r.partida_lote) detalles.push('Lote: ' + r.partida_lote);
+    if (r.d_cantidad_qq) detalles.push(r.d_cantidad_qq + ' qq');
+    if (r.d_peso_kg) detalles.push(r.d_peso_kg + ' kg');
+    if (r.mu_peso_kg) detalles.push(r.mu_peso_kg + ' kg muestra');
+    if (r.pe_peso_balanza) detalles.push(r.pe_peso_balanza + ' kg balanza');
+    if (r.ver_defectos) detalles.push(r.ver_defectos.split(', ').length + ' defecto(s)');
+    if (r.co_precio_planta) detalles.push(r.co_precio_planta + ' Bs/qq');
+    if (r.fotos_count > 0) detalles.push('📷 ' + r.fotos_count);
+    return `
+    <div class="hist-item">
+      <div class="hist-top">
+        <span class="tag tag-${r.actividad}">${names[r.actividad]||r.actividad}</span>
+        <span class="hist-time">${r.hora} · ${r.fecha}</span>
+      </div>
+      <div class="hist-name" style="margin-top:5px;">${r.proveedor || '—'}</div>
+      <div class="hist-detail">Técnico: ${r.tecnico || '—'} · ${detalles.join(' · ')}</div>
+    </div>`;
+  }).join('');
+}
+
+function cambiarPantalla(s) {
+  document.getElementById('screen-registro').classList.toggle('active', s === 'registro');
+  document.getElementById('screen-historial').classList.toggle('active', s === 'historial');
+  document.getElementById('nav-reg').classList.toggle('active', s === 'registro');
+  document.getElementById('nav-hist').classList.toggle('active', s === 'historial');
+  if (s === 'historial') renderHistorial();
+}
+</script>
+</body>
+</html>
